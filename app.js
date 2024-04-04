@@ -18,8 +18,7 @@ app.use('/api',userRouter);
 
 mongoose.connect(process.env.DB_KEY).then(()=>{
     console.log('connected');  
-    
-    app.listen(process.env.PORT||9000,()=>{
+     app.listen(process.env.PORT||9000,()=>{
     console.log('done');
     });
 }).catch((error)=>{console.log(error)})

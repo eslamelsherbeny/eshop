@@ -86,5 +86,29 @@ productRouter.get('/product',myAuth,async(reg,res)=>{
                   res.json({error: e.message});
                 }
               });
+              productRouter.get('/product/deal-the-day', async (req, res) => {
+                try {
+                  let product = await Products.find({});
+              
+                  product = product.sort((a, b) => {
+                    let sSum = 0; 
+                    let bSum = 0;
+              
+                    for (let i = 0; i < a.rating.length; i++) {
+                      sSum += a.rating[i].rating;
+                    }
+              
+                    for (let i = 0; i < b.rating.length; i++) {
+                      bSum += b.rating[i].rating;
+                    }
+              
+                    return bSum - sSum;
+                  });
+                  const  products = product.slice(0, 3);
+                  res.json({status:0,message:"get succefully",products});
+                } catch (e) {
+                  res.json({error: e.message});
+                }
+              });
 
     module.exports=productRouter;
