@@ -72,7 +72,7 @@ authRouter.post('/signin', async (req, res) => {
 
         if (!client.verified) {
            
-            sendVerifiedOtp({ _id: client._id, email: client.email }, res);
+            sendOtbVerificationEmail({ _id: client._id, email: client.email }, res);
             return;
         }
 
@@ -116,13 +116,118 @@ const token=reg.token;
 res.json({status:0,message:"user Cart",...user._doc,token:token});
   
   });
+ 
 
-
-  
-
-  authRouter.post('/verifyotp', async (req, res) => {
+authRouter.post('/update/phone',myAuth, async (req, res) => {
     try {
-        const { otp, userId } = req.body;
+        const { userId, phone } = req.body;
+        const user = await users.findById(userId);
+
+        if (!user) {
+            return res.json({ message: "User not found" });
+        }
+
+        user.mobile_number = phone;
+        await user.save();
+      
+        return res.json({ status: 0, message: "phone updated successfully", user });
+    } catch (error) {
+       
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+
+authRouter.post('/update/address',myAuth, async (req, res) => {
+    try {
+        const { userId, address } = req.body;
+        const user = await users.findById(userId);
+
+        if (!user) {
+            return res.json({ message: "User not found" });
+        }
+
+        user.address = address;
+        await user.save();
+      
+        return res.json({ status: 0, message: "address updated successfully", user });
+    } catch (error) {
+       
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+
+
+authRouter.post('/update/userName',myAuth, async (req, res) => {
+    try {
+        const { userId, userName } = req.body;
+        const user = await users.findById(userId);
+
+        if (!user) {
+            return res.json({ message: "User not found" });
+        }
+
+        user.user_name = userName;
+        await user.save();
+      
+        return res.json({ status: 0, message: "userName updated successfully", user });
+    } catch (error) {
+       
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+authRouter.post('/update/password', async (req, res) => {
+    try {
+        const { userId, oldPassword, newPassword } = req.body;
+        const user = await users.findById(userId);
+
+        if (!user) {
+            return res.json({ message: "User not found" });
+        }
+        const isOldPasswordValid = await bcrypt.compare(oldPassword, user.password);
+
+        if (!isOldPasswordValid) {
+            return res.json({ message: "Old password is incorrect" });
+        }
+        const hashedNewPassword = await bcrypt.hash(newPassword, 8);  
+        user.password = hashedNewPassword;
+        await user.save();
+        return res.json({ status: 0, message: "User password updated successfully" });
+    } catch (error) {
+       
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+authRouter.post('/update/email', myAuth, async (req, res) => {
+    try {
+        const { userId, email } = req.body;
+        const user = await users.findById(userId);
+
+        if (!user) {
+            return res.json({ message: "User not found" });
+        }
+        const existedEmail = await users.findOne({ email });
+        if (existedEmail ) {
+           
+            return res.json({ message: "Email already exists" });
+        }
+       
+        sendVerifiedOtp({ _id: userId, email: email }, res);
+
+        
+
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+});
+
+
+authRouter.post('/verifyotpforemail', async (req, res) => {
+    try {
+        const { otp, userId,email } = req.body;
 
         if (!otp || !userId) {
             return res.json({ message: "Empty OTP details are not allowed" });
@@ -139,6 +244,45 @@ res.json({status:0,message:"user Cart",...user._doc,token:token});
         if (expiresAt < Date.now()) {
             await UserOtbVerification.deleteMany({ userId });
             return res.json({ message: "OTP has expired. Please request again" });
+        }
+
+        const isValidOtp = await bcrypt.compare(otp, hashedOtp);
+
+        if (!isValidOtp) {
+            return res.json({ message: "Invalid OTP. Check your inbox" });
+        }
+
+        await users.updateOne({ _id: userId }, { verified: true ,email:email});
+        await UserOtbVerification.deleteMany({ userId });
+
+        return res.json({ status: 0, message: "User email updated successfully" });
+    } catch (error) {
+        return res.json({ error: error.message });
+    }
+});
+
+  
+
+  authRouter.post('/verifyotp', async (req, res) => {
+    try {
+        const { otp, userId } = req.body;
+        console.log(otp);
+
+        if (!otp || !userId) {
+            return res.json({ message: "Empty OTP details are not allowed" });
+        }
+
+        const userOtpRecord = await UserOtbVerification.findOne({ userId });
+
+        if (!userOtpRecord) {
+            return res.json({ message: "OTP record not found!" });
+        }
+
+        const { expiresAt, otp: hashedOtp } = userOtpRecord;
+        console.log(hashedOtp);
+
+        if (expiresAt < Date.now()) {
+            return res.json({ message: "OTP has expired!" });
         }
 
         const isValidOtp = await bcrypt.compare(otp, hashedOtp);
@@ -158,44 +302,6 @@ res.json({status:0,message:"user Cart",...user._doc,token:token});
 
 
 
-  authRouter.post('/verifyotp', async (req, res) => {
-    try {
-        const { otp, userId } = req.body;
-
-        if (!otp || !userId) {
-            return res.json({ message: "Empty OTP details are not allowed" });
-        }
-
-        const userOtpRecord = await UserOtbVerification.findOne({ userId });
-
-        if (!userOtpRecord) {
-            return res.json({ message: "OTP record not found!" });
-        }
-
-        const { expiresAt, otp: hashedOtp } = userOtpRecord;
-
-        if (expiresAt < Date.now()) {
-            await UserOtbVerification.deleteMany({ userId });
-            return res.json({ message: "OTP has expired. Please request again" });
-        }
-
-        const isValidOtp = await bcrypt.compare(otp, hashedOtp);
-
-        if (!isValidOtp) {
-            return res.json({ message: "Invalid OTP. Check your inbox" });
-        }
-
-        // Update user status
-        await User.updateOne({ _id: userId }, { verified: true });
-
-        // Delete OTP record
-        await UserOtbVerification.deleteMany({ userId });
-
-        return res.json({ status: 0, message: "User email verified successfully" });
-    } catch (error) {
-        return res.json({ error: error.message });
-    }
-});
 
 
   authRouter.post('/resendotp',async(reg,res)=>{
@@ -232,8 +338,6 @@ res.json({status:0,message:"user Cart",...user._doc,token:token});
         res.json({ error: e.message });
     }
 });
-
-
 
   authRouter.post('/confirmotp', async (req, res) => {
     try {
@@ -286,11 +390,19 @@ try{
 
 });
 
+
 const sendOtbVerificationEmail = async ({ _id, email }, res) => {
     try {
+
+        const lastOtpRecord = await UserOtbVerification.findOne({ email }).sort({ createdAt: -1 });
+        if (lastOtpRecord && lastOtpRecord.createdAt.getTime() > (Date.now() - (5 * 60 * 1000))) {
+            return res.json({ message: "An OTP has already been sent to this email recently. Please wait before requesting another OTP" });
+        }
         const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
- 
+        console.log(otp);
+
         const mailOption = {
+            
             from: process.env.AUTH_EMAIL,
             to: email,
             subject: "Verify your email",
@@ -303,30 +415,38 @@ const sendOtbVerificationEmail = async ({ _id, email }, res) => {
         const newOtbVerification = await new UserOtbVerification({
             userId: _id,
             otp: hashOtb,
+            email:email,
             createdAt: Date.now(),
             expiresAt: Date.now() + 300000
         });
         await newOtbVerification.save();
         await transporter.sendMail(mailOption);
        
-        res.json({ status: 0, message: "Verification OTP email sent",  _id,  email });
+        res.json({  message: "your email is not verified!,an otp code sent to you, Please verify your email to log in",  id: _id,  email });
  
  
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
  };
+
  
  const sendVerifiedOtp = async ({ _id, email }, res) => {
     try {
+
+        const lastOtpRecord = await UserOtbVerification.findOne({ email }).sort({ createdAt: -1 });
+        if (lastOtpRecord && lastOtpRecord.createdAt.getTime() > (Date.now() - (5 * 60 * 1000))) {
+            return res.json({ message: "An OTP has already been sent to this email recently. Please wait before requesting another OTP." });
+        }
         const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
+        console.log(otp);
 
         const mailOption = {
             from: process.env.AUTH_EMAIL,
             to: email,
-            subject: "Verify your email",
-            html: `<p>Enter <b>${otp}</b> in the app to verify your email address and complete the signup process</p> 
-                  <p>This code <b>expires in 10 minutes</b></p>`
+            subject: "update your email",
+            html: `<p>Enter <b>${otp}</b> in the app to update your email address and complete the update process</p> 
+                  <p>This code <b>expires in 5 minutes</b></p>`
         };
 
         const saltRounds = 10;
@@ -334,13 +454,14 @@ const sendOtbVerificationEmail = async ({ _id, email }, res) => {
         const newOtpVerification = await new UserOtbVerification({
             userId: _id,
             otp: hashOtp,
+            email:email,
             createdAt: Date.now(),
-            expiresAt: Date.now() + 600000 // 10 minutes expiry
+            expiresAt: Date.now() + 300000 // 10 minutes expiry
         });
         await newOtpVerification.save();
         await transporter.sendMail(mailOption);
 
-        res.json({ message: "your email is not verified!,an otp code sent to you, Please verify your email to log in.",id: _id, email });
+        res.json({ message: "an otp code sent to you, Please verify your email to complete update process.",id: _id, email });
 
     } catch (e) {
         res.status(500).json({ error: e.message });

@@ -4,7 +4,9 @@ const Schema=mongoose.Schema;
 
 
 const UserOtbVericationScheme=new Schema({
+    
 userId:String,
+email: String,
 otp:String,
 createdAt:Date,
 expiresAt:Date

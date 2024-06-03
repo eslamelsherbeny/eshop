@@ -6,13 +6,13 @@ const Order=require('../models/order');
 const users=require('../models/authScheme');
 
 
-adminRouter.post('/admin',admin,async(reg,res)=>{
+adminRouter.post('/admin/addProduct',admin,async(reg,res)=>{
 
 try{
 
-const{productName,description,price,quantity,images,category}=reg.body;
+const{productName,description,price,discount,quantity,images,category}=reg.body;
 
-let product=new Products({productName,description,price,quantity,images,category});
+let product=new Products({productName,description,price,discount,quantity,images,category});
 product= await product.save();
 res.json({status:0,message:"product added succefully",...product._doc,});
 }catch(e){
@@ -78,6 +78,34 @@ adminRouter.get('/admin',admin,async(reg,res)=>{
         res.json({status:0,message:"user Cart",...user._doc,token:token});
           
           });
+          
+          adminRouter.post('/admin/updateProduct', admin, async (req, res) => {
+            try {
+                const { _id, productName, description, price, discount, quantity, images, category } = req.body;
+        
+                let product = await Products.findById(_id);
+        
+                if (!product) {
+                    return res.status(404).json({ error: "Product not found" });
+                }
+        
+                product.productName = productName;
+                product.description = description;
+                product.price = price;
+                product.discount = discount;
+                product.quantity = quantity;
+                product.images = images;
+                product.category = category;
+        
+            
+                product = await product.save();
+        
+                res.json({ status: 0, message: "Product updated successfully", product });
+            } catch (e) {
+                res.json({ error: e.message });
+            }
+        });
+        
 
   adminRouter.get('/admin/analytics', admin, async (req, res) => {
     try {

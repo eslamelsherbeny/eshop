@@ -8,7 +8,7 @@ user_name:{
 },
 country_mobile_code:{
     type:String,
-    required:true,
+    
 },
 mobile_number:{
     type:String,
@@ -44,8 +44,14 @@ cart:[
         }
     }
 ],
+favorite:[
+    {
+        product:productScheme,
+      
+    }
+],
 verified:{
-    
+
     defult: false,
     type: Boolean,
  

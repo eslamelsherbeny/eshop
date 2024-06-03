@@ -10,12 +10,19 @@ productName:{
  
 
 },
+
 description:{
     type:String,
     required:true,
     trim:true
 },
+
 price:{
+    type:Number,
+    required:true,
+},
+
+discount:{
     type:Number,
     required:true,
 },
@@ -37,7 +44,8 @@ images:[
 }
 ],
 
-rating:[ratingScheme]
+rating:[ratingScheme],
+
 
 
 });

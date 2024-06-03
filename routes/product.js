@@ -17,6 +17,8 @@ productRouter.get('/product',myAuth,async(reg,res)=>{
     }
     
     });
+
+    
     productRouter.get('/product/search/:txt',myAuth,async(reg,res)=>{
 
         try{
@@ -32,13 +34,7 @@ productRouter.get('/product',myAuth,async(reg,res)=>{
         }
         
         });
-        productRouter.get('/add',async(reg,res)=>{
-
-         
-          res.send('hello World+++++++++++++++');
-      
-          
-          });
+        
        
     productRouter.post('/product-rating',myAuth,async(reg,res)=>{
 
@@ -87,7 +83,7 @@ productRouter.get('/product',myAuth,async(reg,res)=>{
               
                     return bSum - sSum;
                   });
-                  const  products = product.slice(0, 3);
+                  const  products = product.slice(0, 6);
                   res.json({status:0,message:"get succefully",products});
                 } catch (e) {
                   res.json({error: e.message});
