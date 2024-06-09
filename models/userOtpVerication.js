@@ -1,17 +1,29 @@
-const mongoose=require('mongoose');
-const express = require('express');
-const Schema=mongoose.Schema;
+const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
 
-
-const UserOtbVericationScheme=new Schema({
-    
-userId:String,
-email: String,
-otp:String,
-createdAt:Date,
-expiresAt:Date
-
+const UserOtpVerificationSchema = new Schema({
+    userId: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true
+    },
+    otp: {
+        type: String,
+        required: true
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+        required: true
+    },
+    expiresAt: {
+        type: Date,
+        required: true
+    }
 });
-const UserOtbVerication=mongoose.model('UserOtbVericationScheme',UserOtbVericationScheme);
-module.exports=UserOtbVerication;
 
+const UserOtpVerification = mongoose.model('UserOtpVerification', UserOtpVerificationSchema);
+module.exports = UserOtpVerification;
