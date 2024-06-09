@@ -291,6 +291,10 @@ authRouter.post('/verifyotpforemail', async (req, res) => {
         if (!isValidOtp) {
             return res.json({ message: "Invalid OTP!" });
         }
+         
+        await users.updateOne({ _id: userId }, { verified: true });
+
+          await UserOtpVerification.deleteMany({ userId });
         return res.json({ status: 0, message: "User email verified successfully" });
     } catch (error) {
         return res.json({ error: error.message });
